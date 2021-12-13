@@ -1240,8 +1240,9 @@ class WP_REST_Server {
 		 * @since 4.4.0
 		 *
 		 * @param WP_REST_Response $response Response data.
+		 * @param WP_REST_Request  $request  Request data.
 		 */
-		return apply_filters( 'rest_index', $response );
+		return apply_filters( 'rest_index', $response, $request );
 	}
 
 	/**
