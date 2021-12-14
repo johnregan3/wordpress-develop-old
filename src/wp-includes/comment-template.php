@@ -67,6 +67,8 @@ function comment_author( $comment_ID = 0 ) {
 	$comment = get_comment( $comment_ID );
 	$author  = get_comment_author( $comment );
 
+	$comment_ID = ( null === $comment ) ? $comment_ID : $comment->comment_ID;
+
 	/**
 	 * Filters the comment author's name for display.
 	 *
@@ -76,7 +78,7 @@ function comment_author( $comment_ID = 0 ) {
 	 * @param string $author     The comment author's username.
 	 * @param string $comment_ID The comment ID as a numeric string.
 	 */
-	echo apply_filters( 'comment_author', $author, $comment->comment_ID );
+	echo apply_filters( 'comment_author', $author, $comment_ID );
 }
 
 /**
