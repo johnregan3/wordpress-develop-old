@@ -47,7 +47,7 @@ function get_comment_author( $comment_ID = 0 ) {
 	 *
 	 * @param string          $author       The comment author's username.
 	 * @param int             $comment_ID   The comment ID.
-	 * @param null|WP_Comment $comment      The comment object.
+	 * @param WP_Comment|null $comment      The comment object.
 	 */
 	return apply_filters( 'get_comment_author', $author, $comment_ID, $comment );
 }
@@ -197,7 +197,7 @@ function get_comment_author_email_link( $linktext = '', $before = '', $after = '
 	 * @since 4.1.0 The `$comment` parameter was added.
 	 *
 	 * @param string          $comment_author_email The comment author's email address.
-	 * @param null|WP_Comment $comment              The comment object.
+	 * @param WP_Comment|null $comment              The comment object.
 	 */
 	$email = apply_filters( 'comment_email', $comment_author_email, $comment );
 
@@ -287,7 +287,7 @@ function get_comment_author_IP( $comment_ID = 0 ) { // phpcs:ignore WordPress.Na
 	 *
 	 * @param string          $comment_author_IP The comment author's IP address, or an empty string if it's not available.
 	 * @param string          $comment_ID        The comment ID as a numeric string.
-	 * @param null|WP_Comment $comment           The comment object.
+	 * @param WP_Comment|null $comment           The comment object.
 	 */
 	return apply_filters( 'get_comment_author_IP', $comment_author_IP, $comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 }
@@ -578,7 +578,7 @@ function get_comment_date( $format = '', $comment_ID = 0 ) {
 	 *
 	 * @param string|int      $date    Formatted date string or Unix timestamp.
 	 * @param string          $format  PHP date format.
-	 * @param null|WP_Comment $comment The comment object.
+	 * @param WP_Comment|null $comment The comment object.
 	 */
 	return apply_filters( 'get_comment_date', $date, $format, $comment );
 }
@@ -692,7 +692,7 @@ function get_comment_ID() { // phpcs:ignore WordPress.NamingConventions.ValidFun
 	 * @since 4.1.0 The `$comment` parameter was added.
 	 *
 	 * @param string          $comment_ID The current comment ID as a numeric string.
-	 * @param null|WP_Comment $comment    The comment object.
+	 * @param WP_Comment|null $comment    The comment object.
 	 */
 	return apply_filters( 'get_comment_ID', $comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 }
@@ -1019,7 +1019,7 @@ function get_comment_text( $comment_ID = 0, $args = array() ) {
 	 * @see Walker_Comment::comment()
 	 *
 	 * @param string          $comment_content Text of the comment.
-	 * @param null|WP_Comment $comment         The comment object.
+	 * @param WP_Comment|null $comment         The comment object.
 	 * @param array           $args            An array of arguments.
 	 */
 	return apply_filters( 'get_comment_text', $comment_content, $comment, $args );
@@ -1176,8 +1176,8 @@ function comment_type( $commenttxt = false, $trackbacktxt = false, $pingbacktxt 
  * We keep the name $comment_ID to keep variable naming consistent and avoid
  * confusion.
  *
- * @param null|WP_Comment     $comment    An assumed WP_Comment to be validated.
- * @param null|int|WP_Comment $comment_ID Optional. WP_Comment or ID of the requested comment.
+ * @param WP_Comment|null     $comment    An assumed WP_Comment to be validated.
+ * @param int|null|WP_Comment $comment_ID Optional. WP_Comment or ID of the requested comment.
  *
  * @return int  A valid WP_Comment ID, else 0.
  */
