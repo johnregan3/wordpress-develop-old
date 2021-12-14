@@ -1179,7 +1179,7 @@ function comment_type( $commenttxt = false, $trackbacktxt = false, $pingbacktxt 
  * @param WP_Comment|null     $comment    An assumed WP_Comment to be validated.
  * @param int|null|WP_Comment $comment_ID Optional. WP_Comment or ID of the requested comment.
  *
- * @return int  A valid WP_Comment ID, else 0.
+ * @return string  A valid WP_Comment ID (numeric string), else '0'.
  */
 function validate_comment_id( $comment, $comment_ID = 0 ) {
 	if ( is_a( $comment, 'WP_Comment' )  ) {
@@ -1189,7 +1189,7 @@ function validate_comment_id( $comment, $comment_ID = 0 ) {
 	} elseif ( is_numeric( $comment_ID ) ) {
 		return $comment_ID;
 	}
-	return 0;
+	return '0';
 }
 
 /**
