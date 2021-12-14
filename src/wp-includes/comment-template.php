@@ -39,7 +39,11 @@ function get_comment_author( $comment_ID = 0 ) {
 
 	}
 
-	$comment_ID = ( null === $comment ) ? $comment_ID : $comment->comment_ID;
+	if ( null !== $comment ) {
+		$comment_ID = $comment->comment_ID;
+	} elseif ( ! is_numeric( $comment_ID ) ) {
+		$comment_ID = 0;
+	}
 
 	/**
 	 * Filters the returned comment author name.
@@ -67,7 +71,11 @@ function comment_author( $comment_ID = 0 ) {
 	$comment = get_comment( $comment_ID );
 	$author  = get_comment_author( $comment );
 
-	$comment_ID = ( null === $comment ) ? $comment_ID : $comment->comment_ID;
+	if ( null !== $comment ) {
+		$comment_ID = $comment->comment_ID;
+	} elseif ( ! is_numeric( $comment_ID ) ) {
+		$comment_ID = 0;
+	}
 
 	/**
 	 * Filters the comment author's name for display.
