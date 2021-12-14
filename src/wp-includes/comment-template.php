@@ -990,21 +990,24 @@ function get_comments_number_text( $zero = false, $one = false, $more = false, $
  * @return string The comment content.
  */
 function get_comment_text( $comment_ID = 0, $args = array() ) {
-	$comment = get_comment( $comment_ID );
+	$comment         = get_comment( $comment_ID );
+	$comment_content = '';
 
-	$comment_content = $comment->comment_content;
+	if ( is_a( $comment, 'WP_Comment' ) ) {
+		$comment_content = $comment->comment_content;
 
-	if ( is_comment_feed() && $comment->comment_parent ) {
-		$parent = get_comment( $comment->comment_parent );
-		if ( $parent ) {
-			$parent_link = esc_url( get_comment_link( $parent ) );
-			$name        = get_comment_author( $parent );
+		if ( is_comment_feed() && $comment->comment_parent ) {
+			$parent = get_comment( $comment->comment_parent );
+			if ( $parent ) {
+				$parent_link = esc_url( get_comment_link( $parent ) );
+				$name        = get_comment_author( $parent );
 
-			$comment_content = sprintf(
-				/* translators: %s: Comment link. */
-				ent2ncr( __( 'In reply to %s.' ) ),
-				'<a href="' . $parent_link . '">' . $name . '</a>'
-			) . "\n\n" . $comment_content;
+				$comment_content = sprintf(
+					/* translators: %s: Comment link. */
+					ent2ncr( __( 'In reply to %s.' ) ),
+					'<a href="' . $parent_link . '">' . $name . '</a>'
+				) . "\n\n" . $comment_content;
+			}
 		}
 	}
 
@@ -1015,9 +1018,9 @@ function get_comment_text( $comment_ID = 0, $args = array() ) {
 	 *
 	 * @see Walker_Comment::comment()
 	 *
-	 * @param string     $comment_content Text of the comment.
-	 * @param WP_Comment $comment         The comment object.
-	 * @param array      $args            An array of arguments.
+	 * @param string          $comment_content Text of the comment.
+	 * @param null|WP_Comment $comment         The comment object.
+	 * @param array           $args            An array of arguments.
 	 */
 	return apply_filters( 'get_comment_text', $comment_content, $comment, $args );
 }
