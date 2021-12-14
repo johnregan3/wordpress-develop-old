@@ -226,9 +226,10 @@ function get_comment_author_email_link( $linktext = '', $before = '', $after = '
  * @return string The comment author name or HTML link for author's URL.
  */
 function get_comment_author_link( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
-	$url     = get_comment_author_url( $comment );
-	$author  = get_comment_author( $comment );
+	$comment    = get_comment( $comment_ID );
+	$url        = get_comment_author_url( $comment );
+	$author     = get_comment_author( $comment );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
 
 	if ( empty( $url ) || 'http://' === $url ) {
 		$return = $author;
@@ -247,7 +248,7 @@ function get_comment_author_link( $comment_ID = 0 ) {
 	 * @param string $author     The comment author's username.
 	 * @param string $comment_ID The comment ID as a numeric string.
 	 */
-	return apply_filters( 'get_comment_author_link', $return, $author, $comment->comment_ID );
+	return apply_filters( 'get_comment_author_link', $return, $author, $comment_ID );
 }
 
 /**
@@ -282,9 +283,9 @@ function get_comment_author_IP( $comment_ID = 0 ) { // phpcs:ignore WordPress.Na
 	 * @since 1.5.0
 	 * @since 4.1.0 The `$comment_ID` and `$comment` parameters were added.
 	 *
-	 * @param string     $comment_author_IP The comment author's IP address, or an empty string if it's not available.
-	 * @param string     $comment_ID        The comment ID as a numeric string.
-	 * @param WP_Comment $comment           The comment object.
+	 * @param string          $comment_author_IP The comment author's IP address, or an empty string if it's not available.
+	 * @param string          $comment_ID        The comment ID as a numeric string.
+	 * @param null|WP_Comment $comment           The comment object.
 	 */
 	return apply_filters( 'get_comment_author_IP', $comment->comment_author_IP, $comment->comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 }
@@ -348,6 +349,7 @@ function get_comment_author_url( $comment_ID = 0 ) {
 function comment_author_url( $comment_ID = 0 ) {
 	$comment    = get_comment( $comment_ID );
 	$author_url = get_comment_author_url( $comment );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
 
 	/**
 	 * Filters the comment author's URL for display.
@@ -358,7 +360,7 @@ function comment_author_url( $comment_ID = 0 ) {
 	 * @param string $author_url The comment author's URL.
 	 * @param string $comment_ID The comment ID as a numeric string.
 	 */
-	echo apply_filters( 'comment_url', $author_url, $comment->comment_ID );
+	echo apply_filters( 'comment_url', $author_url, $comment_ID );
 }
 
 /**
