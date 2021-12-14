@@ -22,27 +22,21 @@
  * @return string The comment author
  */
 function get_comment_author( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
+	$comment    = get_comment( $comment_ID );
+	$author     = __( 'Anonymous' );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
 
-	$author = __( 'Anonymous' );
-
-	if ( null !== $comment && ! empty( $comment->comment_author ) ) {
+	if ( is_a( $comment, 'WP_Comment' ) && ! empty( $comment->comment_author ) ) {
 
 		$author = $comment->comment_author;
 
-	} elseif ( null !== $comment && ! empty( $comment->user_id ) ) {
+	} elseif ( is_a( $comment, 'WP_Comment' ) && ! empty( $comment->user_id ) ) {
 
 		$user = $comment->user_id ? get_userdata( $comment->user_id ) : false;
 		if ( $user && ! empty( $user->display_name ) ) {
 			$author = $user->display_name;
 		}
 
-	}
-
-	if ( null !== $comment ) {
-		$comment_ID = $comment->comment_ID;
-	} elseif ( ! is_numeric( $comment_ID ) ) {
-		$comment_ID = 0;
 	}
 
 	/**
@@ -68,14 +62,9 @@ function get_comment_author( $comment_ID = 0 ) {
  *                                   Default current comment.
  */
 function comment_author( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
-	$author  = get_comment_author( $comment );
-
-	if ( null !== $comment ) {
-		$comment_ID = $comment->comment_ID;
-	} elseif ( ! is_numeric( $comment_ID ) ) {
-		$comment_ID = 0;
-	}
+	$comment    = get_comment( $comment_ID );
+	$author     = get_comment_author( $comment );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
 
 	/**
 	 * Filters the comment author's name for display.
@@ -100,7 +89,9 @@ function comment_author( $comment_ID = 0 ) {
  * @return string The current comment author's email
  */
 function get_comment_author_email( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
+	$comment              = get_comment( $comment_ID );
+	$comment_ID           = validate_comment_id( $comment, $comment_ID );
+	$comment_author_email = is_a( $comment, 'WP_Comment' ) ? $comment->comment_author_email : '';
 
 	/**
 	 * Filters the comment author's returned email address.
@@ -112,7 +103,7 @@ function get_comment_author_email( $comment_ID = 0 ) {
 	 * @param string     $comment_ID           The comment ID as a numeric string.
 	 * @param WP_Comment $comment              The comment object.
 	 */
-	return apply_filters( 'get_comment_author_email', $comment->comment_author_email, $comment->comment_ID, $comment );
+	return apply_filters( 'get_comment_author_email', $comment->comment_author_email, $comment_ID, $comment );
 }
 
 /**
@@ -133,6 +124,7 @@ function get_comment_author_email( $comment_ID = 0 ) {
 function comment_author_email( $comment_ID = 0 ) {
 	$comment      = get_comment( $comment_ID );
 	$author_email = get_comment_author_email( $comment );
+	$comment_ID   = validate_comment_id( $comment, $comment_ID );
 
 	/**
 	 * Filters the comment author's email for display.
@@ -143,7 +135,7 @@ function comment_author_email( $comment_ID = 0 ) {
 	 * @param string $author_email The comment author's email address.
 	 * @param string $comment_ID   The comment ID as a numeric string.
 	 */
-	echo apply_filters( 'author_email', $author_email, $comment->comment_ID );
+	echo apply_filters( 'author_email', $author_email, $comment_ID );
 }
 
 /**
@@ -192,7 +184,8 @@ function comment_author_email_link( $linktext = '', $before = '', $after = '', $
  *                via the {@see 'comment_email'} filter with antispambot().
  */
 function get_comment_author_email_link( $linktext = '', $before = '', $after = '', $comment = null ) {
-	$comment = get_comment( $comment );
+	$comment              = get_comment( $comment );
+	$comment_author_email = get_comment_author_email( $comment );
 
 	/**
 	 * Filters the comment author's email for display.
@@ -203,10 +196,10 @@ function get_comment_author_email_link( $linktext = '', $before = '', $after = '
 	 * @since 1.2.0
 	 * @since 4.1.0 The `$comment` parameter was added.
 	 *
-	 * @param string     $comment_author_email The comment author's email address.
-	 * @param WP_Comment $comment              The comment object.
+	 * @param string          $comment_author_email The comment author's email address.
+	 * @param null|WP_Comment $comment              The comment object.
 	 */
-	$email = apply_filters( 'comment_email', $comment->comment_author_email, $comment );
+	$email = apply_filters( 'comment_email', $comment_author_email, $comment );
 
 	if ( ( ! empty( $email ) ) && ( '@' !== $email ) ) {
 		$display = ( '' !== $linktext ) ? $linktext : $email;
@@ -1149,6 +1142,36 @@ function comment_type( $commenttxt = false, $trackbacktxt = false, $pingbacktxt 
 		default:
 			echo $commenttxt;
 	}
+}
+
+/**
+ * Validate a Comment ID is numeric in template functions.
+ *
+ * This helper is used to return a numeric comment ID
+ * when given the results of get_comment() and an input $comment_ID.
+ *
+ * get_comment() can return null, so it cannot be assume it is an object
+ * with the property $comment_ID.
+ *
+ * Also, the value named $comment_ID passed into one of these template
+ * functions can be misleading, as it may be either an int or a WP_Comment object.
+ * We keep the name $comment_ID to keep variable naming consistent and avoid
+ * confusion.
+ *
+ * @param null|WP_Comment     $comment    An assumed WP_Comment to be validated.
+ * @param null|int|WP_Comment $comment_ID Optional. WP_Comment or ID of the requested comment.
+ *
+ * @return int  A valid WP_Comment ID, else 0.
+ */
+function validate_comment_id( $comment, $comment_ID = 0 ) {
+	if ( is_a( $comment, 'WP_Comment' )  ) {
+		return $comment->comment_ID;
+	} elseif ( is_a( $comment_ID, 'WP_Comment' ) ) {
+		return $comment_ID->comment_ID;
+	} elseif ( is_numeric( $comment_ID ) ) {
+		return $comment_ID;
+	}
+	return 0;
 }
 
 /**
