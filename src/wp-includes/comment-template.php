@@ -1069,7 +1069,12 @@ function comment_text( $comment_ID = 0, $args = array() ) {
 function get_comment_time( $format = '', $gmt = false, $translate = true ) {
 	$comment = get_comment();
 
-	$comment_date = $gmt ? $comment->comment_date_gmt : $comment->comment_date;
+	if ( is_a( $comment, 'WP_Comment' ) ) {
+		$comment_date = $gmt ? $comment->comment_date_gmt : $comment->comment_date;
+	} else {
+		// Default to current timestamp if anything is wrong with the $comment object.
+		$comment_date = wp_date( 'Y-m-d H:i:s' );
+	}
 
 	$_format = ! empty( $format ) ? $format : get_option( 'time_format' );
 
@@ -1080,11 +1085,11 @@ function get_comment_time( $format = '', $gmt = false, $translate = true ) {
 	 *
 	 * @since 1.5.0
 	 *
-	 * @param string|int $date      The comment time, formatted as a date string or Unix timestamp.
-	 * @param string     $format    PHP date format.
-	 * @param bool       $gmt       Whether the GMT date is in use.
-	 * @param bool       $translate Whether the time is translated.
-	 * @param WP_Comment $comment   The comment object.
+	 * @param string|int      $date      The comment time, formatted as a date string or Unix timestamp.
+	 * @param string          $format    PHP date format.
+	 * @param bool            $gmt       Whether the GMT date is in use.
+	 * @param bool            $translate Whether the time is translated.
+	 * @param WP_Comment|null $comment   The comment object.
 	 */
 	return apply_filters( 'get_comment_time', $date, $format, $gmt, $translate, $comment );
 }
@@ -1111,10 +1116,12 @@ function comment_time( $format = '' ) {
  * @return string The comment type.
  */
 function get_comment_type( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
+	$comment      = get_comment( $comment_ID );
+	$comment_ID   = validate_comment_id( $comment, $comment_ID );
+	$comment_type = 'comment';
 
-	if ( '' === $comment->comment_type ) {
-		$comment->comment_type = 'comment';
+	if ( is_a( $comment, 'WP_Comment' ) && ! empty( $comment->comment_type ) ) {
+		$comment_type = $comment->comment_type;
 	}
 
 	/**
@@ -1123,11 +1130,11 @@ function get_comment_type( $comment_ID = 0 ) {
 	 * @since 1.5.0
 	 * @since 4.1.0 The `$comment_ID` and `$comment` parameters were added.
 	 *
-	 * @param string     $comment_type The type of comment, such as 'comment', 'pingback', or 'trackback'.
-	 * @param string     $comment_ID   The comment ID as a numeric string.
-	 * @param WP_Comment $comment      The comment object.
+	 * @param string          $comment_type The type of comment, such as 'comment', 'pingback', or 'trackback'.
+	 * @param string          $comment_ID   The comment ID as a numeric string.
+	 * @param WP_Comment|null $comment      The comment object.
 	 */
-	return apply_filters( 'get_comment_type', $comment->comment_type, $comment->comment_ID, $comment );
+	return apply_filters( 'get_comment_type', $comment_type, $comment_ID, $comment );
 }
 
 /**
@@ -1163,7 +1170,7 @@ function comment_type( $commenttxt = false, $trackbacktxt = false, $pingbacktxt 
 }
 
 /**
- * Validate a Comment ID is numeric in template functions.
+ * Validate that a Comment ID is numeric in template functions.
  *
  * This helper is used to return a numeric comment ID
  * when given the results of get_comment() and an input $comment_ID.
@@ -1171,10 +1178,10 @@ function comment_type( $commenttxt = false, $trackbacktxt = false, $pingbacktxt 
  * get_comment() can return null, so it cannot be assume it is an object
  * with the property $comment_ID.
  *
- * Also, the value named $comment_ID passed into one of these template
+ * Also, the value named $comment_ID passed into these template
  * functions can be misleading, as it may be either an int or a WP_Comment object.
- * We keep the name $comment_ID to keep variable naming consistent and avoid
- * confusion.
+ * We keep the name $comment_ID here to keep variable naming consistent and avoid
+ * any further confusion.
  *
  * @param WP_Comment|null     $comment    An assumed WP_Comment to be validated.
  * @param int|null|WP_Comment $comment_ID Optional. WP_Comment or ID of the requested comment.
@@ -1189,6 +1196,7 @@ function validate_comment_id( $comment, $comment_ID = 0 ) {
 	} elseif ( is_numeric( $comment_ID ) ) {
 		return $comment_ID;
 	}
+
 	return '0';
 }
 
