@@ -543,7 +543,7 @@ function get_comment_class( $class = '', $comment_id = null, $post_id = null ) {
 	 *
 	 * @param string[]    $classes    An array of comment classes.
 	 * @param string[]    $class      An array of additional classes added to the list.
-	 * @param string      $comment_id The comment ID as a numeric string.
+	 * @param string      $comment_ID The comment ID as a numeric string.
 	 * @param WP_Comment  $comment    The comment object.
 	 * @param int|WP_Post $post_id    The post ID or WP_Post object.
 	 */
@@ -610,11 +610,14 @@ function comment_date( $format = '', $comment_ID = 0 ) {
  * @return string The possibly truncated comment excerpt.
  */
 function get_comment_excerpt( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
+	$comment    = get_comment( $comment_ID );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
 
-	if ( ! post_password_required( $comment->comment_post_ID ) ) {
+	$comment_text = '';
+
+	if ( is_a( $comment, 'WP_Comment' ) && ! post_password_required( $comment->comment_post_ID ) ) {
 		$comment_text = strip_tags( str_replace( array( "\n", "\r" ), ' ', $comment->comment_content ) );
-	} else {
+	} elseif ( is_a( $comment, 'WP_Comment' ) ) {
 		$comment_text = __( 'Password protected' );
 	}
 
@@ -642,7 +645,7 @@ function get_comment_excerpt( $comment_ID = 0 ) {
 	 * @param string     $comment_ID The comment ID as a numeric string.
 	 * @param WP_Comment $comment    The comment object.
 	 */
-	return apply_filters( 'get_comment_excerpt', $excerpt, $comment->comment_ID, $comment );
+	return apply_filters( 'get_comment_excerpt', $excerpt, $comment_ID, $comment );
 }
 
 /**
@@ -657,6 +660,7 @@ function get_comment_excerpt( $comment_ID = 0 ) {
 function comment_excerpt( $comment_ID = 0 ) {
 	$comment         = get_comment( $comment_ID );
 	$comment_excerpt = get_comment_excerpt( $comment );
+	$comment_ID      = validate_comment_id( $comment, $comment_ID );
 
 	/**
 	 * Filters the comment excerpt for display.
@@ -667,7 +671,7 @@ function comment_excerpt( $comment_ID = 0 ) {
 	 * @param string $comment_excerpt The comment excerpt text.
 	 * @param string $comment_ID      The comment ID as a numeric string.
 	 */
-	echo apply_filters( 'comment_excerpt', $comment_excerpt, $comment->comment_ID );
+	echo apply_filters( 'comment_excerpt', $comment_excerpt, $comment_ID );
 }
 
 /**
@@ -678,7 +682,8 @@ function comment_excerpt( $comment_ID = 0 ) {
  * @return string The comment ID as a numeric string.
  */
 function get_comment_ID() { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid
-	$comment = get_comment();
+	$comment    = get_comment();
+	$comment_ID = is_a( $comment, 'WP_Comment' ) ? $comment->comment_ID : '0';
 
 	/**
 	 * Filters the returned comment ID.
@@ -687,9 +692,9 @@ function get_comment_ID() { // phpcs:ignore WordPress.NamingConventions.ValidFun
 	 * @since 4.1.0 The `$comment` parameter was added.
 	 *
 	 * @param string     $comment_ID The current comment ID as a numeric string.
-	 * @param WP_Comment $comment    The comment object.
+	 * @param null|WP_Comment $comment    The comment object.
 	 */
-	return apply_filters( 'get_comment_ID', $comment->comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
+	return apply_filters( 'get_comment_ID', $comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 }
 
 /**
