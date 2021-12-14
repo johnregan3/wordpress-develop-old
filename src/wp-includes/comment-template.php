@@ -691,7 +691,7 @@ function get_comment_ID() { // phpcs:ignore WordPress.NamingConventions.ValidFun
 	 * @since 1.5.0
 	 * @since 4.1.0 The `$comment` parameter was added.
 	 *
-	 * @param string     $comment_ID The current comment ID as a numeric string.
+	 * @param string          $comment_ID The current comment ID as a numeric string.
 	 * @param null|WP_Comment $comment    The comment object.
 	 */
 	return apply_filters( 'get_comment_ID', $comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
@@ -735,6 +735,10 @@ function get_comment_link( $comment = null, $args = array() ) {
 	global $wp_rewrite, $in_comment_loop;
 
 	$comment = get_comment( $comment );
+
+	if ( ! is_a( $comment, 'WP_Comment' ) ) {
+		return '';
+	}
 
 	// Back-compat.
 	if ( ! is_array( $args ) ) {
