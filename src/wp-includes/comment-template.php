@@ -24,16 +24,22 @@
 function get_comment_author( $comment_ID = 0 ) {
 	$comment = get_comment( $comment_ID );
 
-	if ( empty( $comment->comment_author ) ) {
-		$user = $comment->user_id ? get_userdata( $comment->user_id ) : false;
-		if ( $user ) {
-			$author = $user->display_name;
-		} else {
-			$author = __( 'Anonymous' );
-		}
-	} else {
+	$author = _( 'Anonymous' );
+
+	if ( null !== $comment && ! empty( $comment->comment_author ) ) {
+
 		$author = $comment->comment_author;
+
+	} elseif ( null !== $comment && ! empty( $comment->user_id ) ) {
+
+		$user = $comment->user_id ? get_userdata( $comment->user_id ) : false;
+		if ( $user && ! empty( $user->display_name ) ) {
+			$author = $user->display_name;
+		}
+
 	}
+
+	$comment_ID = ( null === $comment ) ? $comment_ID : $comment->comment_ID;
 
 	/**
 	 * Filters the returned comment author name.
@@ -41,11 +47,11 @@ function get_comment_author( $comment_ID = 0 ) {
 	 * @since 1.5.0
 	 * @since 4.1.0 The `$comment_ID` and `$comment` parameters were added.
 	 *
-	 * @param string     $author     The comment author's username.
-	 * @param string     $comment_ID The comment ID as a numeric string.
-	 * @param WP_Comment $comment    The comment object.
+	 * @param string          $author       The comment author's username.
+	 * @param int             $comment_ID   The comment ID.
+	 * @param null|WP_Comment $comment      The comment object.
 	 */
-	return apply_filters( 'get_comment_author', $author, $comment->comment_ID, $comment );
+	return apply_filters( 'get_comment_author', $author, $comment_ID, $comment );
 }
 
 /**
