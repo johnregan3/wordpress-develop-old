@@ -24,7 +24,7 @@
 function get_comment_author( $comment_ID = 0 ) {
 	$comment = get_comment( $comment_ID );
 
-	$author = _( 'Anonymous' );
+	$author = __( 'Anonymous' );
 
 	if ( null !== $comment && ! empty( $comment->comment_author ) ) {
 
