@@ -275,7 +275,9 @@ function comment_author_link( $comment_ID = 0 ) {
  * @return string Comment author's IP address, or an empty string if it's not available.
  */
 function get_comment_author_IP( $comment_ID = 0 ) { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid
-	$comment = get_comment( $comment_ID );
+	$comment           = get_comment( $comment_ID );
+	$comment_ID        = validate_comment_id( $comment, $comment_ID );
+	$comment_author_IP = is_a( $comment, 'WP_Comment' ) ? $comment->comment_author_IP : 0;
 
 	/**
 	 * Filters the comment author's returned IP address.
@@ -287,7 +289,7 @@ function get_comment_author_IP( $comment_ID = 0 ) { // phpcs:ignore WordPress.Na
 	 * @param string          $comment_ID        The comment ID as a numeric string.
 	 * @param null|WP_Comment $comment           The comment object.
 	 */
-	return apply_filters( 'get_comment_author_IP', $comment->comment_author_IP, $comment->comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
+	return apply_filters( 'get_comment_author_IP', $comment_author_IP, $comment_ID, $comment );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 }
 
 /**
@@ -314,14 +316,13 @@ function comment_author_IP( $comment_ID = 0 ) { // phpcs:ignore WordPress.Naming
  * @return string Comment author URL, if provided, an empty string otherwise.
  */
 function get_comment_author_url( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
-	$url     = '';
-	$id      = 0;
+	$comment    = get_comment( $comment_ID );
+	$comment_ID = validate_comment_id( $comment, $comment_ID );
+	$url        = '';
 
 	if ( ! empty( $comment ) ) {
 		$author_url = ( 'http://' === $comment->comment_author_url ) ? '' : $comment->comment_author_url;
 		$url        = esc_url( $author_url, array( 'http', 'https' ) );
-		$id         = $comment->comment_ID;
 	}
 
 	/**
@@ -334,7 +335,7 @@ function get_comment_author_url( $comment_ID = 0 ) {
 	 * @param string|int      $comment_ID The comment ID as a numeric string, or 0 if not found.
 	 * @param WP_Comment|null $comment    The comment object, or null if not found.
 	 */
-	return apply_filters( 'get_comment_author_url', $url, $id, $comment );
+	return apply_filters( 'get_comment_author_url', $url, $comment_ID, $comment );
 }
 
 /**
@@ -565,16 +566,19 @@ function get_comment_date( $format = '', $comment_ID = 0 ) {
 
 	$_format = ! empty( $format ) ? $format : get_option( 'date_format' );
 
-	$date = mysql2date( $_format, $comment->comment_date );
+	// Default to current timestamp if anything is wrong with the $comment object.
+	$comment_date = is_a( $comment, 'WP_Comment' ) ? $comment->comment_date : wp_date( 'Y-m-d H:i:s' );
+
+	$date = mysql2date( $_format, $comment_date );
 
 	/**
 	 * Filters the returned comment date.
 	 *
 	 * @since 1.5.0
 	 *
-	 * @param string|int $date    Formatted date string or Unix timestamp.
-	 * @param string     $format  PHP date format.
-	 * @param WP_Comment $comment The comment object.
+	 * @param string|int      $date    Formatted date string or Unix timestamp.
+	 * @param string          $format  PHP date format.
+	 * @param null|WP_Comment $comment The comment object.
 	 */
 	return apply_filters( 'get_comment_date', $date, $format, $comment );
 }
