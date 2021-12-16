@@ -246,4 +246,242 @@ class Tests_Theme_wpTheme extends WP_UnitTestCase {
 
 		$this->assertSameSetsWithIndex( $allowed_themes, $new_allowed_themes );
 	}
+
+	/**
+	 * @dataProvider data_is_block_theme
+	 * @ticket 54460
+	 *
+	 * @covers WP_Theme::is_block_theme
+	 *
+	 * @param string $theme_dir Directory of the theme to test.
+	 * @param bool   $expected  Expected result.
+	 */
+	public function test_is_block_theme( $theme_dir, $expected ) {
+		$theme = new WP_Theme( $theme_dir, $this->theme_root );
+		$this->assertSame( $expected, $theme->is_block_theme() );
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array
+	 */
+	public function data_is_block_theme() {
+		return array(
+			'default - non-block theme' => array(
+				'theme_dir' => 'default',
+				'expected'  => false,
+			),
+			'parent block theme'        => array(
+				'theme_dir' => 'test-block-theme',
+				'expected'  => true,
+			),
+			'child block theme'         => array(
+				'theme_dir' => 'test-block-child-theme',
+				'expected'  => true,
+			),
+		);
+	}
+
+	/**
+	 * @dataProvider data_get_file_path
+	 * @ticket 54460
+	 *
+	 * @covers WP_Theme::get_file_path
+	 *
+	 * @param string $theme_dir Directory of the theme to test.
+	 * @param string $file      Given file name to test.
+	 * @param string $expected  Expected file path.
+	 */
+	public function test_get_file_path( $theme_dir, $file, $expected ) {
+		$theme = new WP_Theme( $theme_dir, $this->theme_root );
+
+		$this->assertStringEndsWith( $expected, $theme->get_file_path( $file ) );
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array
+	 */
+	public function data_get_file_path() {
+		return array(
+			'no theme: no file given'           => array(
+				'theme_dir' => 'nonexistent',
+				'file'      => '',
+				'expected'  => '/nonexistent',
+			),
+			'parent theme: no file given'       => array(
+				'theme_dir' => 'test-block-theme',
+				'file'      => '',
+				'expected'  => '/test-block-theme',
+			),
+			'child theme: no file given'        => array(
+				'theme_dir' => 'test-block-child-theme',
+				'file'      => '',
+				'expected'  => '/test-block-child-theme',
+			),
+			'nonexistent theme: file given'     => array(
+				'theme_dir' => 'nonexistent',
+				'file'      => '/templates/page.html',
+				'expected'  => '/nonexistent/templates/page.html',
+			),
+			'parent theme: file exists'         => array(
+				'theme_dir' => 'test-block-theme',
+				'file'      => '/templates/page-home.html',
+				'expected'  => '/test-block-theme/templates/page-home.html',
+			),
+			'parent theme: file does not exist' => array(
+				'theme_dir' => 'test-block-theme',
+				'file'      => '/templates/nonexistent.html',
+				'expected'  => '/test-block-theme/templates/nonexistent.html',
+			),
+			'child theme: file exists'          => array(
+				'theme_dir' => 'test-block-child-theme',
+				'file'      => '/templates/page-1.html',
+				'expected'  => '/test-block-child-theme/templates/page-1.html',
+			),
+			'child theme: file does not exist'  => array(
+				'theme_dir' => 'test-block-child-theme',
+				'file'      => '/templates/nonexistent.html',
+				'expected'  => '/test-block-theme/templates/nonexistent.html',
+			),
+			'child theme: file exists in parent, not in child' => array(
+				'theme_dir' => 'test-block-child-theme',
+				'file'      => '/templates/page.html',
+				'expected'  => '/test-block-theme/templates/page.html',
+			),
+		);
+	}
+
+	/**
+	 * Tests that block themes support a feature by default.
+	 *
+	 * @ticket 54597
+	 * @dataProvider data_block_theme_has_default_support
+	 *
+	 * @covers ::_add_default_theme_supports
+	 *
+	 * @param array $support {
+	 *     The feature to check.
+	 *
+	 *     @type string $feature     The feature to check.
+	 *     @type string $sub_feature Optional. The sub-feature to check.
+	 * }
+	 */
+	public function test_block_theme_has_default_support( $support ) {
+		$this->helper_requires_block_theme();
+
+		$support_data     = array_values( $support );
+		$support_data_str = implode( ': ', $support_data );
+
+		// Remove existing support.
+		if ( current_theme_supports( ...$support_data ) ) {
+			remove_theme_support( ...$support_data );
+		}
+
+		$this->assertFalse(
+			current_theme_supports( ...$support_data ),
+			"Could not remove support for $support_data_str."
+		);
+
+		do_action( 'setup_theme' );
+
+		$this->assertTrue(
+			current_theme_supports( ...$support_data ),
+			"Does not have default support for $support_data_str."
+		);
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array
+	 */
+	public function data_block_theme_has_default_support() {
+		return array(
+			'post-thumbnails'      => array(
+				'support' => array(
+					'feature' => 'post-thumbnails',
+				),
+			),
+			'responsive-embeds'    => array(
+				'support' => array(
+					'feature' => 'responsive-embeds',
+				),
+			),
+			'editor-styles'        => array(
+				'support' => array(
+					'feature' => 'editor-styles',
+				),
+			),
+			'html5: style'         => array(
+				'support' => array(
+					'feature'     => 'html5',
+					'sub_feature' => 'style',
+				),
+			),
+			'html5: script'        => array(
+				'support' => array(
+					'feature'     => 'html5',
+					'sub_feature' => 'script',
+				),
+			),
+			'automatic-feed-links' => array(
+				'support' => array(
+					'feature' => 'automatic-feed-links',
+				),
+			),
+		);
+	}
+
+	/**
+	 * Tests that block themes load separate core block assets by default.
+	 *
+	 * @ticket 54597
+	 *
+	 * @covers ::wp_should_load_separate_core_block_assets
+	 */
+	public function test_block_theme_should_load_separate_core_block_assets_by_default() {
+		$this->helper_requires_block_theme();
+
+		add_filter( 'should_load_separate_core_block_assets', '__return_false' );
+
+		$this->assertFalse(
+			wp_should_load_separate_core_block_assets(),
+			'Could not disable loading separate core block assets.'
+		);
+
+		do_action( 'setup_theme' );
+
+		$this->assertTrue(
+			wp_should_load_separate_core_block_assets(),
+			'Block themes do not load separate core block assets by default.'
+		);
+	}
+
+	/**
+	 * Helper function to ensure that a block theme is available and active.
+	 */
+	private function helper_requires_block_theme() {
+		// No need to switch if we're already on a block theme.
+		if ( wp_is_block_theme() ) {
+			return;
+		}
+
+		$block_theme        = 'twentytwentytwo';
+		$block_theme_object = new WP_Theme( $block_theme, WP_CONTENT_DIR . '/themes' );
+
+		// Skip if the block theme is not available.
+		if ( ! $block_theme_object->exists() ) {
+			$this->markTestSkipped( "$block_theme must be available." );
+		}
+
+		switch_theme( $block_theme );
+
+		// Skip if we could not switch to the block theme.
+		if ( wp_get_theme()->stylesheet !== $block_theme ) {
+			$this->markTestSkipped( "Could not switch to $block_theme." );
+		}
+	}
 }
